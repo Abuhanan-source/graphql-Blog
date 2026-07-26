@@ -1,18 +1,16 @@
 import { expressMiddleware } from "@as-integrations/express5";
 import { ApolloServer } from '@apollo/server';
-import { schema } from './graph/schema/schema.js';
-import { resolvers } from './graph/resolvers/Resolver.js';
 import dotenv from 'dotenv';
-import { connectDB } from './config/dbconnect.js';
 import express from 'express';
-import http from 'http';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
-import { upload } from "./middleware/multer.js";
-import uploadOnCloudinary from "./utils/cloudnary.js";
-import User from "./Schema/UserSchema/UserSchema.js";
+import User from "../src/Schema/UserSchema/UserSchema.js";
+import uploadOnCloudinary from "../src/utils/cloudnary.js";
+import { connectDB } from "../src/config/dbconnect.js";
+import { resolvers } from "../src/graph/resolvers/Resolver.js";
+import { schema } from "../src/graph/schema/schema.js";
+import { upload } from "../src/middleware/multer.js";
 dotenv.config();
 
 
@@ -24,25 +22,20 @@ declare global {
   }
 }
 
-const port = Number(process.env.PORT) || 3000;
-
 const app = express();
-const httpServer = http.createServer(app);
 
-connectDB();
-
-const server = new ApolloServer({
-  typeDefs:schema,
-  resolvers:resolvers,
-  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-});
-
-await server.start();
-
+// ---- DB connection: reuse across invocations instead of reconnecting on
+// every request (serverless functions are re-invoked, not long-running). ----
+let dbConnected = false;
+async function ensureDB() {
+  if (dbConnected) return;
+  await connectDB();
+  dbConnected = true;
+}
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL, // e.g. https://your-frontend.vercel.app
     credentials: true,
   })
 );
@@ -51,6 +44,8 @@ app.use(cookieParser());
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
+    await ensureDB();
+
     if (!req.file) {
       return res.status(400).json({ error: "Koi file nahi mili" });
     }
@@ -72,9 +67,23 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
+// ---- Apollo Server: start once, cache the promise across invocations ----
+const server = new ApolloServer({
+  typeDefs: schema,
+  resolvers: resolvers,
+  // No ApolloServerPluginDrainHttpServer here — there's no long-lived
+  // httpServer to drain in a serverless function.
+});
+
+const serverStarted = server.start();
 
 app.use(
   "/graphql",
+  async (req, res, next) => {
+    await ensureDB();
+    await serverStarted;
+    next();
+  },
   expressMiddleware(server, {
     context: async ({ req, res }) => {
       const token = req.cookies?.uid;
@@ -85,30 +94,26 @@ app.use(
 
       try {
         interface DecodedToken extends JwtPayload {
-        userId: string;
-        email:string;
-        Isbaned:boolean;
-        Status:boolean;
-        Role:string;
+          userId: string;
         }
 
         const userVerification = jwt.verify(
           token,
           process.env.JWT_SECRET as string
-        ) as DecodedToken
+        ) as DecodedToken;
 
         const freshUser = await User.findOne({ _id: userVerification?.userId } as any);
 
-          if (!freshUser) {
-            return { req, res, user: null };
-          }
+        if (!freshUser) {
+          return { req, res, user: null };
+        }
 
-         return {
+        return {
           req,
           res,
           user: {
             userId: freshUser._id,
-            email:freshUser.email,
+            email: freshUser.email,
             Role: freshUser.Role,
             Isbaned: freshUser.Isbaned,
             Status: freshUser.Status,
@@ -125,6 +130,13 @@ app.use(
   })
 );
 
+// Local dev: run a real listening server. On Vercel, this file is imported
+// as a handler instead — `vercel dev`/production never calls `.listen()`.
+if (!process.env.VERCEL) {
+  const port = Number(process.env.PORT) || 4000;
+  app.listen(port, () => {
+    console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
+  });
+}
 
-await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
-console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+export default app;

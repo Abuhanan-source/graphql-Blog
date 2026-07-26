@@ -39,6 +39,11 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  }
+    "skipLibCheck": true
+  },
+  // Explicitly scope the program to src/ only. "api" is compiled separately
+  // by Vercel's own build system (@vercel/node), not by this local tsc
+  // (src -> dist), so it's never part of this program in the first place.
+  "include": ["src/**/*"],
+  "exclude": ["api", "dist", "node_modules"]
 }
