@@ -1,0 +1,37 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-color);
+  /* Theme variables */
+  --bg-color: #071022; /* page background */
+  --surface-color: #0f1724; /* surfaces/cards */
+  --card-color: rgba(255,255,255,0.03);
+  --text-color: #e6eef8;
+  --muted-color: #94a3b8;
+  --primary-color: #06b6d4; /* cyan */
+  --secondary-color: #7c3aed; /* purple */
+  --accent-color: #8b5cf6;
+  --gradient-primary: linear-gradient(90deg,var(--primary-color),var(--secondary-color));
+  background-color: var(--bg-color);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+#root {
+  min-height: 100vh;
+}
