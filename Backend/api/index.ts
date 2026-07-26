@@ -11,8 +11,8 @@ import { connectDB } from "../src/config/dbconnect.js";
 import { resolvers } from "../src/graph/resolvers/Resolver.js";
 import { schema } from "../src/graph/schema/schema.js";
 import { upload } from "../src/middleware/multer.js";
-dotenv.config();
 
+dotenv.config();
 
 declare global {
   namespace Express {
@@ -67,7 +67,10 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-// ---- Apollo Server: start once, cache the promise across invocations ----
+// ---- Apollo Server: must be fully started BEFORE expressMiddleware() is
+// called — expressMiddleware asserts started status at creation time, not
+// per-request. Top-level await works here because package.json has
+// "type": "module". ----
 const server = new ApolloServer({
   typeDefs: schema,
   resolvers: resolvers,
@@ -75,13 +78,12 @@ const server = new ApolloServer({
   // httpServer to drain in a serverless function.
 });
 
-const serverStarted = server.start();
+await server.start();
 
 app.use(
   "/graphql",
   async (req, res, next) => {
     await ensureDB();
-    await serverStarted;
     next();
   },
   expressMiddleware(server, {
