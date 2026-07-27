@@ -5,16 +5,13 @@ import Cards from "../../Schema/projectCardScheme/CardSchema.js";
 import CommentServices, { type CommentCreateType } from "../../services/Comment.js";
 import Comments from "../../Schema/comments/BlogComment.js";
 
-const books = [
-  {
-    title: 'The Awakening',
-    author: 'Kate Chopin',
-  },
-  {
-    title: 'City of Glass',
-    author: 'Paul Auster',
-  },
-];
+const isProd = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+};
 
 export const resolvers = {
     Query: {
@@ -188,14 +185,11 @@ export const resolvers = {
     Login: async (_: any, verifyData: verifyTypes,{ res }: any) => {
       try {
         const token = await UserServices.VerifyUser(verifyData);
-       
 
-       res.cookie("uid", token, {
-          httpOnly: true,
-          secure: false,      // production mein true (HTTPS)
-          sameSite: "lax",
-          maxAge: 24 * 60 * 60 * 1000,
-        });
+        res.cookie("uid", token, {
+        ...cookieOptions,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
 
         return "Login successful";
       } catch (error) {
@@ -260,11 +254,9 @@ export const resolvers = {
       try {
         const token = await UserServices.otpVerifier(OtpEmail);
 
-       res.cookie("uid", token, {
-          httpOnly: true,
-          secure: false,      // production mein true (HTTPS)
-          sameSite: "lax",
-          maxAge: 24 * 60 * 60 * 1000,
+       res.clearCookie("uid", {
+          path: "/",
+          ...cookieOptions,
         });
 
         return "Accout Verified successfully!";

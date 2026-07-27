@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 /* ---------------------------------- API ---------------------------------- */
 
-const ENDPOINT = "http://localhost:4000/graphql";
+const ENDPOINT = `${import.meta.env.VITE_API_URL}/graphql`;
 
 async function gql<T = any>(query: string, variables: Record<string, any> = {}): Promise<T> {
   const res = await fetch(ENDPOINT, {

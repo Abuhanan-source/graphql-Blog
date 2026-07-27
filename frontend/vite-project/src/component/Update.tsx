@@ -13,6 +13,10 @@ interface FormData {
   LiveLink: string;
 }
 
+const uploadUrl = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/upload`
+  : 'http://localhost:4000/upload';
+
 interface Blogdata {
   ProjectName: string;
   Describtion: string;
@@ -157,7 +161,7 @@ function UpdateBlog() {
     const formDataToSend = new FormData();
     formDataToSend.append('image', file);
 
-    const res = await fetch('http://localhost:4000/upload', {
+    const res = await fetch(uploadUrl, {
       method: 'POST',
       body: formDataToSend,
       credentials: 'include',
