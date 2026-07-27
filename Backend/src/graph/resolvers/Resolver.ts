@@ -78,11 +78,9 @@ export const resolvers = {
       clearcookie: async (_: any, params: any, { res }: any) => {
 
         try {
-          res.clearCookie("uid", {
+         res.clearCookie("uid", {
             path: "/",
-            httpOnly: true,
-            secure: isProd,                       // true in deployment, false in local
-            sameSite: isProd ? "none" : "lax",    // adjust based on what login uses
+            ...cookieOptions,
           });
           
           return "Logout Successfully!";
