@@ -32,7 +32,6 @@ function useCurrentUser() {
   });
 
   useEffect(() => {
-    console.log(data);
     if (data?.getCurrentUser) {
       dispatch(setUser(data.getCurrentUser));
       

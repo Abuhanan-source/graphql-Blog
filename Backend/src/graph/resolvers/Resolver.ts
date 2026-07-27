@@ -79,10 +79,10 @@ export const resolvers = {
 
         try {
           res.clearCookie("uid", {
-              path: "/",             // Crucial: Must match creation path
-              httpOnly: true,        
-              secure: false,          // Must match creation security status
-              sameSite: "lax"        
+            path: "/",
+            httpOnly: true,
+            secure: isProd,                       // true in deployment, false in local
+            sameSite: isProd ? "none" : "lax",    // adjust based on what login uses
           });
           
           return "Logout Successfully!";

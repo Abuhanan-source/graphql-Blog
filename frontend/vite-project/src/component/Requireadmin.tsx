@@ -12,8 +12,6 @@ interface RootState {
 
 export default function RequireAdmin({ children }: { children: ReactNode }) {
   const user = useSelector((state: RootState) => state.auth.user);
-  console.log(user);
-  
 
   // not logged in at all — send to login
   if (!user) {

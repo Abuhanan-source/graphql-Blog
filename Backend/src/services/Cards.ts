@@ -202,14 +202,11 @@ class BlogServices {
           });
         }
 
-        console.log(blog.BlogOwner,id)
-        
-
-        if(blog.BlogOwner != id){
+        if (blog.BlogOwner.toString() !== id.toString()) {
             throw new GraphQLError("You can't update this content!", {
-            extensions: { code: 'BAD_USER_INPUT' }
-          });
-        }
+              extensions: { code: "BAD_USER_INPUT" },
+            });
+          }
 
         blog.ProjectName = BlogData.ProjectName
         blog.Describtion = BlogData.Describtion

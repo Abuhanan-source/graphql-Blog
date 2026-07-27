@@ -51,8 +51,6 @@ function SpecificBlog() {
 
         const result = await BlogTrigger({ variables: { id: BlogId } });
         const data = result && 'data' in result ? result.data : undefined;
-        console.log(data);
-        
 
         if (data && data.CurrentBlog) {
           setBlog(data.CurrentBlog);
