@@ -10,6 +10,9 @@ interface FormData {
   LiveLink: string;
 }
 
+// Falls back to localhost for local dev when VITE_API_URL isn't set.
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 function BlogCreate() {
   const [formData, setFormData] = useState<FormData>({
     ProjectName: '',
@@ -110,7 +113,7 @@ function BlogCreate() {
     const formDataToSend = new FormData();
     formDataToSend.append('image', file);
 
-    const res = await fetch('http://localhost:4000/upload', {
+    const res = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
       body: formDataToSend,
       credentials: 'include',
