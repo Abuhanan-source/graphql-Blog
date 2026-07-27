@@ -254,7 +254,7 @@ export const resolvers = {
       try {
         const token = await UserServices.otpVerifier(OtpEmail);
 
-       res.clearCookie("uid", {
+            res.cookie("uid", token, {
           path: "/",
           ...cookieOptions,
         });
